@@ -5,9 +5,11 @@
 
 package com.liferay.portal.util;
 
+import com.liferay.document.library.kernel.exception.NoSuchFileException;
 import com.liferay.petra.io.BigEndianCodec;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
@@ -21,6 +23,7 @@ import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.DummyHttpServletResponse;
 import com.liferay.portal.kernel.servlet.DynamicServletRequest;
 import com.liferay.portal.kernel.servlet.PersistentHttpServletRequestWrapper;
+import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -58,6 +61,7 @@ import jakarta.portlet.WindowState;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -80,6 +84,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
  * @author Miguel Pastor
@@ -811,6 +816,34 @@ public class PortalImplUnitTest {
 
 			Assert.assertFalse(_portalImpl.isValidResourceId("%view.jsp"));
 		}
+	}
+
+	@Test
+	public void testSendErrorForNoSuchModelExceptionSetsLayoutAttribute()
+		throws Exception {
+
+		MockHttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest();
+		MockHttpServletResponse mockHttpServletResponse =
+			new MockHttpServletResponse();
+
+		_portalImpl.sendError(
+			0, new NoSuchFileException("test"), mockHttpServletRequest,
+			mockHttpServletResponse);
+
+		Assert.assertEquals(
+			HttpServletResponse.SC_NOT_FOUND,
+			mockHttpServletResponse.getStatus());
+
+		Assert.assertEquals(
+			Boolean.TRUE,
+			mockHttpServletRequest.getAttribute(
+				NoSuchLayoutException.class.getName()));
+
+		Assert.assertFalse(
+			SessionErrors.contains(
+				mockHttpServletRequest.getSession(),
+				NoSuchFileException.class));
 	}
 
 	@Test
