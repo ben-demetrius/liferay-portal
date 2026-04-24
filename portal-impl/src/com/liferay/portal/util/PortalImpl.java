@@ -38,6 +38,7 @@ import com.liferay.portal.kernel.exception.ImageTypeException;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.NoSuchImageException;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
+import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.exception.NoSuchUserException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.RSSFeedException;
@@ -6075,7 +6076,13 @@ public class PortalImpl implements Portal {
 
 			httpServletResponse.setStatus(status);
 
-			SessionErrors.add(httpSession, exception.getClass(), exception);
+			if (exception instanceof NoSuchModelException) {
+				httpServletRequest.setAttribute(
+					NoSuchLayoutException.class.getName(), Boolean.TRUE);
+			}
+			else {
+				SessionErrors.add(httpSession, exception.getClass(), exception);
+			}
 
 			ServletContext servletContext = httpSession.getServletContext();
 
