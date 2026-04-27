@@ -5991,8 +5991,16 @@ public class PortalImpl implements Portal {
 			if (exception instanceof PrincipalException) {
 				status = HttpServletResponse.SC_FORBIDDEN;
 			}
-			else if (exception instanceof NoSuchModelException) {
-				status = HttpServletResponse.SC_NOT_FOUND;
+			else {
+				Class<?> clazz = exception.getClass();
+
+				String name = clazz.getName();
+
+				name = name.substring(name.lastIndexOf(CharPool.PERIOD) + 1);
+
+				if (name.startsWith("NoSuch") && name.endsWith("Exception")) {
+					status = HttpServletResponse.SC_NOT_FOUND;
+				}
 			}
 
 			if (status == 0) {
