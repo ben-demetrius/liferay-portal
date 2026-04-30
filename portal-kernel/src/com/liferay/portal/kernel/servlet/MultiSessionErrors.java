@@ -5,9 +5,14 @@
 
 package com.liferay.portal.kernel.servlet;
 
+import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
+import com.liferay.document.library.kernel.exception.NoSuchFileException;
+import com.liferay.document.library.kernel.exception.NoSuchFolderException;
 import com.liferay.portal.kernel.exception.InfoFormException;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
+import com.liferay.portal.kernel.exception.NoSuchImageException;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
+import com.liferay.portal.kernel.exception.NoSuchUserException;
 import com.liferay.portal.kernel.exception.UserPasswordException;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -86,8 +91,11 @@ public class MultiSessionErrors {
 	private static final Class<?>[] _CLASSES_HIDE_DEFAULT_ERROR_MESSAGE =
 		ArrayUtil.append(
 			new Class<?>[] {
-				InfoFormException.class, NoSuchGroupException.class,
-				NoSuchLayoutException.class, UserPasswordException.class
+				InfoFormException.class, NoSuchFileEntryException.class,
+				NoSuchFileException.class, NoSuchFolderException.class,
+				NoSuchGroupException.class, NoSuchImageException.class,
+				NoSuchLayoutException.class, NoSuchUserException.class,
+				UserPasswordException.class
 			},
 			UserPasswordException.class.getDeclaredClasses());
 
