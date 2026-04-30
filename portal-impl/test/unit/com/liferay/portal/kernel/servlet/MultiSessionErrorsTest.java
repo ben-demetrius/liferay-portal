@@ -5,6 +5,11 @@
 
 package com.liferay.portal.kernel.servlet;
 
+import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
+import com.liferay.document.library.kernel.exception.NoSuchFileException;
+import com.liferay.document.library.kernel.exception.NoSuchFolderException;
+import com.liferay.portal.kernel.exception.NoSuchImageException;
+import com.liferay.portal.kernel.exception.NoSuchUserException;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -170,6 +175,67 @@ public class MultiSessionErrorsTest {
 		SessionErrors.add(portletRequest, RandomTestUtil.randomString());
 
 		Assert.assertFalse(MultiSessionErrors.isEmpty(portletRequest));
+	}
+
+	@Test
+	public void testIsHideDefaultErrorMessageForNoSuchFileEntryException() {
+		SessionErrors.add(
+			_mockHttpServletRequest, NoSuchFileEntryException.class);
+
+		PortletRequest portletRequest = new MockLiferayPortletRequest(
+			_mockHttpServletRequest);
+
+		Assert.assertTrue(
+			MultiSessionErrors.isHideDefaultErrorMessage(
+				portletRequest, RandomTestUtil.randomString()));
+	}
+
+	@Test
+	public void testIsHideDefaultErrorMessageForNoSuchFileException() {
+		SessionErrors.add(_mockHttpServletRequest, NoSuchFileException.class);
+
+		PortletRequest portletRequest = new MockLiferayPortletRequest(
+			_mockHttpServletRequest);
+
+		Assert.assertTrue(
+			MultiSessionErrors.isHideDefaultErrorMessage(
+				portletRequest, RandomTestUtil.randomString()));
+	}
+
+	@Test
+	public void testIsHideDefaultErrorMessageForNoSuchFolderException() {
+		SessionErrors.add(_mockHttpServletRequest, NoSuchFolderException.class);
+
+		PortletRequest portletRequest = new MockLiferayPortletRequest(
+			_mockHttpServletRequest);
+
+		Assert.assertTrue(
+			MultiSessionErrors.isHideDefaultErrorMessage(
+				portletRequest, RandomTestUtil.randomString()));
+	}
+
+	@Test
+	public void testIsHideDefaultErrorMessageForNoSuchImageException() {
+		SessionErrors.add(_mockHttpServletRequest, NoSuchImageException.class);
+
+		PortletRequest portletRequest = new MockLiferayPortletRequest(
+			_mockHttpServletRequest);
+
+		Assert.assertTrue(
+			MultiSessionErrors.isHideDefaultErrorMessage(
+				portletRequest, RandomTestUtil.randomString()));
+	}
+
+	@Test
+	public void testIsHideDefaultErrorMessageForNoSuchUserException() {
+		SessionErrors.add(_mockHttpServletRequest, NoSuchUserException.class);
+
+		PortletRequest portletRequest = new MockLiferayPortletRequest(
+			_mockHttpServletRequest);
+
+		Assert.assertTrue(
+			MultiSessionErrors.isHideDefaultErrorMessage(
+				portletRequest, RandomTestUtil.randomString()));
 	}
 
 	private final MockHttpServletRequest _mockHttpServletRequest =
