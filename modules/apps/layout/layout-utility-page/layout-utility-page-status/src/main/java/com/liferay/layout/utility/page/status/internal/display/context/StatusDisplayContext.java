@@ -9,7 +9,6 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
@@ -17,6 +16,7 @@ import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -40,6 +40,11 @@ public class StatusDisplayContext {
 			HttpComponentsUtil.decodeURL(themeDisplay.getPortalURL() + url));
 	}
 
+	public Exception getException() {
+		return (Exception)_httpServletRequest.getAttribute(
+			WebKeys.STATUS_EXCEPTION);
+	}
+
 	public boolean isNoSuchResourceException() {
 		if (GetterUtil.getBoolean(
 				_httpServletRequest.getAttribute(
@@ -48,23 +53,28 @@ public class StatusDisplayContext {
 			return true;
 		}
 
-		for (String key : SessionErrors.keySet(_httpServletRequest)) {
-			key = key.substring(key.lastIndexOf(StringPool.PERIOD) + 1);
+		Exception exception = getException();
 
-			if (key.startsWith("NoSuch") && key.endsWith("Exception")) {
+		if (exception != null) {
+			String simpleName = exception.getClass(
+			).getSimpleName();
+
+			if (simpleName.startsWith("NoSuch") &&
+				simpleName.endsWith("Exception")) {
+
 				return true;
 			}
 		}
 
-		String exception = ParamUtil.getString(
+		String exceptionParam = ParamUtil.getString(
 			_httpServletRequest, "exception");
 
-		if (Validator.isNotNull(exception)) {
-			exception = exception.substring(
-				exception.lastIndexOf(StringPool.PERIOD) + 1);
+		if (Validator.isNotNull(exceptionParam)) {
+			exceptionParam = exceptionParam.substring(
+				exceptionParam.lastIndexOf(StringPool.PERIOD) + 1);
 
-			if (exception.startsWith("NoSuch") &&
-				exception.endsWith("Exception")) {
+			if (exceptionParam.startsWith("NoSuch") &&
+				exceptionParam.endsWith("Exception")) {
 
 				return true;
 			}
@@ -73,19 +83,17 @@ public class StatusDisplayContext {
 		return false;
 	}
 
-	public void logSessionErrors() {
-		for (String key : SessionErrors.keySet(_httpServletRequest)) {
-			Object value = SessionErrors.get(_httpServletRequest, key);
+	public void logException() {
+		Exception exception = getException();
 
-			if (value instanceof Exception) {
-				Exception exception = (Exception)value;
+		if (exception == null) {
+			return;
+		}
 
-				_log.error("Error: " + exception.getMessage());
+		_log.error("Error: " + exception.getMessage());
 
-				if (_log.isDebugEnabled()) {
-					_log.debug(exception);
-				}
-			}
+		if (_log.isDebugEnabled()) {
+			_log.debug(exception);
 		}
 	}
 
