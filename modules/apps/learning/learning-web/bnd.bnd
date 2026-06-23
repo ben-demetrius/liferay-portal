@@ -1,0 +1,4 @@
+Bundle-Name: Liferay Learning Web
+Bundle-SymbolicName: com.liferay.learning.web
+Bundle-Version: 1.0.0
+Web-ContextPath: /learning-web
