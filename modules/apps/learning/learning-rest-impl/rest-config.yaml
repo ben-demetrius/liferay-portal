@@ -1,0 +1,12 @@
+apiDir: "../learning-rest-api/src/main/java"
+apiPackagePath: "com.liferay.learning.rest"
+application:
+    baseURI: "/learning"
+    className: "LearningApplication"
+    name: "Liferay.Learning.REST"
+author: "Ben Demetrius"
+clientDir: "../learning-rest-client/src/main/java"
+compatibilityVersion: 15
+forcePredictableOperationId: true
+javaEEPackage: "jakarta"
+testDir: "../learning-rest-test/src/testIntegration/java"
