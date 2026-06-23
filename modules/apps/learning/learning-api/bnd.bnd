@@ -1,0 +1,8 @@
+Bundle-Name: Liferay Learning API
+Bundle-SymbolicName: com.liferay.learning.api
+Bundle-Version: 1.0.0
+Export-Package:\
+	com.liferay.learning.exception,\
+	com.liferay.learning.model,\
+	com.liferay.learning.service,\
+	com.liferay.learning.service.persistence

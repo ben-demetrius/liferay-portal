@@ -1,0 +1,1 @@
+create index IX_D70571AD on Book (groupId, title[$COLUMN_LENGTH:75$]);
