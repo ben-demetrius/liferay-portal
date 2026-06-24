@@ -1,0 +1,8 @@
+Bundle-Name: Liferay Reading API
+Bundle-SymbolicName: com.liferay.reading.api
+Bundle-Version: 1.0.0
+Export-Package:\
+	com.liferay.reading.exception,\
+	com.liferay.reading.model,\
+	com.liferay.reading.service,\
+	com.liferay.reading.service.persistence
