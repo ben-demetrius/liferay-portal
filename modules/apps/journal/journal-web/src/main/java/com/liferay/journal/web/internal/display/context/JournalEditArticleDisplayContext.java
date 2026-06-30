@@ -81,6 +81,7 @@ import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -1154,6 +1155,8 @@ public class JournalEditArticleDisplayContext {
 			"showPublishModal", _isShowPublishModal()
 		).put(
 			"timeZone", getTimeZoneMap()
+		).put(
+			"use12Hours", DateUtil.isFormatAmPm(_themeDisplay.getLocale())
 		).put(
 			"workflowEnabled", () -> _isWorkflowEnabled()
 		).build();
