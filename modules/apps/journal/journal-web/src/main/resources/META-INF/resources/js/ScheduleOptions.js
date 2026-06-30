@@ -14,6 +14,9 @@ import React, {useEffect} from 'react';
 const FUTURE_YEARS_RANGE = 25;
 const PAST_YEARS_RANGE = 50;
 
+const DATE_TIME_LENGTH = 16;
+const DATE_TIME_LENGTH_AM_PM = 19;
+
 export default function ScheduleOptions({
 	displayDate,
 	error,
@@ -29,7 +32,14 @@ export default function ScheduleOptions({
 
 	useEffect(() => {
 		if (displayDate) {
-			if (displayDate.length !== 16 || !dateUtils.isValid(displayDate)) {
+			const requiredLength = use12Hours
+				? DATE_TIME_LENGTH_AM_PM
+				: DATE_TIME_LENGTH;
+
+			if (
+				displayDate.length !== requiredLength ||
+				!dateUtils.isValid(displayDate)
+			) {
 				setError(Liferay.Language.get('please-enter-a-valid-date'));
 
 				return;
@@ -38,7 +48,7 @@ export default function ScheduleOptions({
 				setError('');
 			}
 		}
-	}, [displayDate, setError, timeZone]);
+	}, [displayDate, setError, timeZone, use12Hours]);
 
 	return (
 		<>
