@@ -225,18 +225,19 @@ public class ObjectEntryModelListener extends BaseModelListener<ObjectEntry> {
 			bundleContext, RelevantObjectEntryModelListener.class);
 	}
 
-	private void _addModifiedLocalizedAttributes(
+	private boolean _addModifiedLocalizedAttributes(
 		List<Attribute> attributes, String defaultLanguageId,
 		ObjectField objectField, Map<String, Serializable> originalValues,
 		Map<String, Serializable> values) {
 
 		Map<String, Serializable> originalLocalizedValues = _getLocalizedValues(
 			objectField, originalValues);
-		Map<String, Serializable> localizedValues = _getLocalizedValues(
-			objectField, values);
 
 		Set<String> languageIds = new TreeSet<>(
 			originalLocalizedValues.keySet());
+
+		Map<String, Serializable> localizedValues = _getLocalizedValues(
+			objectField, values);
 
 		languageIds.addAll(localizedValues.keySet());
 
@@ -255,6 +256,8 @@ public class ObjectEntryModelListener extends BaseModelListener<ObjectEntry> {
 					_getAuditValue(objectField, value),
 					_getAuditValue(objectField, originalValue)));
 		}
+
+		return !languageIds.isEmpty();
 	}
 
 	private void _executeObjectActions(
@@ -302,6 +305,8 @@ public class ObjectEntryModelListener extends BaseModelListener<ObjectEntry> {
 
 		JSONObject additionalInfoJSONObject = auditMessage.getAdditionalInfo();
 
+		String defaultLanguageId = _getDefaultLanguageId(objectEntry);
+
 		for (ObjectField objectField :
 				_objectFieldLocalService.getObjectFields(
 					objectDefinition.getObjectDefinitionId())) {
@@ -312,17 +317,18 @@ public class ObjectEntryModelListener extends BaseModelListener<ObjectEntry> {
 				Map<String, Serializable> localizedValues = _getLocalizedValues(
 					objectField, values);
 
-				for (Map.Entry<String, Serializable> entry :
-						localizedValues.entrySet()) {
+				if (MapUtil.isNotEmpty(localizedValues)) {
+					for (Map.Entry<String, Serializable> entry :
+							localizedValues.entrySet()) {
 
-					additionalInfoJSONObject.put(
-						_getLocalizedAttributeName(
-							_getDefaultLanguageId(objectEntry), entry.getKey(),
-							objectField),
-						_getAuditValue(objectField, entry.getValue()));
+						additionalInfoJSONObject.put(
+							_getLocalizedAttributeName(
+								defaultLanguageId, entry.getKey(), objectField),
+							_getAuditValue(objectField, entry.getValue()));
+					}
+
+					continue;
 				}
-
-				continue;
 			}
 
 			additionalInfoJSONObject.put(
@@ -488,10 +494,10 @@ public class ObjectEntryModelListener extends BaseModelListener<ObjectEntry> {
 				_objectFieldLocalService.getObjectFields(
 					objectDefinition.getObjectDefinitionId())) {
 
-			if (objectField.isLocalized()) {
+			if (objectField.isLocalized() &&
 				_addModifiedLocalizedAttributes(
 					attributes, defaultLanguageId, objectField, originalValues,
-					values);
+					values)) {
 
 				continue;
 			}
