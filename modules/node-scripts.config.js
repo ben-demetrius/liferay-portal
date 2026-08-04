@@ -10,7 +10,7 @@
  */
 
 module.exports = {
-	hash: '062057d96994aa523fcea6509917c9119605f2dc4dade4ff54eba58281224816',
+	hash: '731f43d33fd6c162386e9a840bdfa1bfc0c00d0c012f0cd50c0c6bbd2fa91f3d',
 	imports: {
 		'@liferay/accessibility-menu-web': [],
 		'@liferay/accessibility-settings-state-web': [],
@@ -269,7 +269,6 @@ module.exports = {
 		'@liferay/saved-content-web': [],
 		'@liferay/scim-configuration-web': [],
 		'@liferay/search-experiences-web': [],
-		'@liferay/seo-studio-web': [],
 		'@liferay/site-cmp-site-initializer': [],
 		'@liferay/site-cms-site-initializer': [],
 		'@liferay/site-cms-standalone-site-initializer': [],
@@ -410,10 +409,18 @@ module.exports = {
 			'@ckeditor/ckeditor5-watchdog/dist/index.js',
 			'@ckeditor/ckeditor5-widget/dist/index.js',
 			'@ckeditor/ckeditor5-word-count/dist/index.js',
-			'frontend-editor-ckeditor-web/plugins/DocumentLinkSelector',
+			'@codemirror/autocomplete',
+			'@codemirror/commands',
+			'@codemirror/lang-html',
+			'@codemirror/lang-markdown',
+			'@codemirror/language',
+			'@codemirror/state',
+			'@codemirror/theme-one-dark',
+			'@codemirror/view',
 			'ckeditor5/ckeditor5.css',
 			'ckeditor5-premium-features/ckeditor5-premium-features.css',
 			'eventsource',
+			'frontend-editor-ckeditor-web/plugins/DocumentLinkSelector',
 		],
 		'frontend-js-aui-web': [],
 		'frontend-js-clay-sample-web': [],
