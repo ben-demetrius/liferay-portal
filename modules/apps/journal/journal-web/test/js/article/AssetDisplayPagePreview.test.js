@@ -24,9 +24,6 @@ const renderComponent = () =>
 
 describe('AssetDisplayPagePreview', () => {
 	beforeEach(() => {
-
-		// The edit article form renders this field, and PreviewButton reads it.
-
 		const articleIdInput = document.createElement('input');
 
 		articleIdInput.id = `${DEFAULT_PROPS.portletNamespace}articleId`;
