@@ -3,6 +3,9 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+// eslint-disable-next-line @liferay/portal/no-cross-module-deep-import
+import {checkAccessibility} from '@liferay/layout-js-components-web/test/__lib__/index';
+
 import '@testing-library/jest-dom';
 import {render} from '@testing-library/react';
 import React from 'react';
@@ -30,5 +33,11 @@ describe('SelectAssetDisplayPage', () => {
 				).toHaveAttribute('type', 'hidden');
 			}
 		);
+	});
+
+	it('has no accessibility violations', async () => {
+		const {container} = renderComponent();
+
+		await checkAccessibility({bestPractices: true, context: container});
 	});
 });
