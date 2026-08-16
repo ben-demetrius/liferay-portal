@@ -131,6 +131,22 @@ public class FreeMarkerFragmentEntryProcessorTest {
 	}
 
 	@Test
+	public void testAddFragmentEntryWithDynamicDataDuringImport()
+		throws Exception {
+
+		try {
+			ExportImportThreadLocal.setLayoutImportInProcess(true);
+
+			Assert.assertNotNull(
+				_addFragmentEntry(
+					"fragment_entry_with_rest_client_data.html", null));
+		}
+		finally {
+			ExportImportThreadLocal.setLayoutImportInProcess(false);
+		}
+	}
+
+	@Test
 	public void testAddFragmentEntryWithFragmentElementId() throws Exception {
 		FragmentEntry fragmentEntry = _fragmentEntryService.addFragmentEntry(
 			null, _group.getGroupId(),

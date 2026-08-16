@@ -63,7 +63,8 @@ public class FreeMarkerFragmentEntryValidator
 					CompanyThreadLocal.getCompanyId());
 
 		if (!freeMarkerFragmentEntryProcessorConfiguration.enable() ||
-			!_isFreeMarkerTemplate(html)) {
+			!_isFreeMarkerTemplate(html) ||
+			ExportImportThreadLocal.isImportInProcess()) {
 
 			return;
 		}
