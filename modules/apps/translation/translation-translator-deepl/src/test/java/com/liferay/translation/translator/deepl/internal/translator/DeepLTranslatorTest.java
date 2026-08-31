@@ -11,15 +11,19 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.translation.translator.TranslatorPacket;
 import com.liferay.translation.translator.deepl.internal.configuration.DeepLTranslatorConfiguration;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
@@ -82,6 +86,21 @@ public class DeepLTranslatorTest {
 		Assert.assertEquals(
 			Map.of("infoField--JournalArticle_title--0", "哈囉，世界！"),
 			translatorPacket.getFieldsMap());
+	}
+
+	@Test
+	public void testTranslationSetsUserAgent() throws Exception {
+		_deepLTranslator.translate(
+			_getTranslatorPocket(
+				Map.of("infoField--JournalArticle_title--0", false), "en_US",
+				"ca_ES"));
+
+		Assert.assertFalse(_userAgents.isEmpty());
+
+		for (String userAgent : _userAgents) {
+			Assert.assertEquals(
+				"Liferay/" + ReleaseInfo.getVersion(), userAgent);
+		}
 	}
 
 	private String _getTranslationsJSON(String text) {
@@ -193,6 +212,8 @@ public class DeepLTranslatorTest {
 			invocation -> {
 				Http.Options options = invocation.getArgument(0);
 
+				_userAgents.add(options.getHeader(HttpHeaders.USER_AGENT));
+
 				Http.Response httpResponse = new Http.Response();
 
 				httpResponse.setResponseCode(200);
@@ -246,5 +267,6 @@ public class DeepLTranslatorTest {
 	private static final long _COMPANY_ID = RandomTestUtil.randomLong();
 
 	private final DeepLTranslator _deepLTranslator = new DeepLTranslator();
+	private final List<String> _userAgents = new ArrayList<>();
 
 }
