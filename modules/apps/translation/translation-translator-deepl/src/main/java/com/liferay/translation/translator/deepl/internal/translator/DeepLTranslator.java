@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.url.URLBuilder;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.translation.exception.TranslatorException;
@@ -179,6 +180,8 @@ public class DeepLTranslator extends BaseTranslator {
 
 		options.addHeader(
 			HttpHeaders.AUTHORIZATION, "DeepL-Auth-Key " + authKey);
+		options.addHeader(
+			HttpHeaders.USER_AGENT, "Liferay/" + ReleaseInfo.getVersion());
 		options.setLocation(url);
 
 		try {
