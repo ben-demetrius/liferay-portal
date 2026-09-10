@@ -9,6 +9,7 @@ import com.liferay.journal.internal.upgrade.helper.JournalArticleImageUpgradeHel
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.LoggingTimer;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.Node;
@@ -18,7 +19,9 @@ import com.liferay.portal.kernel.xml.XPath;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author Eudaldo Alonso
@@ -42,7 +45,8 @@ public class DocumentLibraryTypeContentUpgradeProcess extends UpgradeProcess {
 		contentDocument = contentDocument.clone();
 
 		XPath xPath = SAXReaderUtil.createXPath(
-			"//dynamic-element[@type='document_library']");
+			"//dynamic-element[@type='document_library' or " +
+				"@type='image_gallery']");
 
 		List<Node> imageNodes = xPath.selectNodes(contentDocument);
 
@@ -52,15 +56,38 @@ public class DocumentLibraryTypeContentUpgradeProcess extends UpgradeProcess {
 			List<Element> dynamicContentElements = imageElement.elements(
 				"dynamic-content");
 
+			List<String> dataList = new ArrayList<>();
+
+			boolean converted = false;
+
 			for (Element dynamicContentElement : dynamicContentElements) {
 				String data =
 					_journalArticleImageUpgradeHelper.getDocumentLibraryValue(
 						dynamicContentElement.getText());
 
+				dataList.add(data);
+
+				if (Validator.isNotNull(data)) {
+					converted = true;
+				}
+			}
+
+			if (!converted &&
+				Objects.equals(
+					imageElement.attributeValue("type"), "image_gallery")) {
+
+				continue;
+			}
+
+			for (int i = 0; i < dynamicContentElements.size(); i++) {
+				Element dynamicContentElement = dynamicContentElements.get(i);
+
 				dynamicContentElement.clearContent();
 
-				dynamicContentElement.addCDATA(data);
+				dynamicContentElement.addCDATA(dataList.get(i));
 			}
+
+			imageElement.addAttribute("type", "document_library");
 		}
 
 		return contentDocument.formattedString();
@@ -71,7 +98,8 @@ public class DocumentLibraryTypeContentUpgradeProcess extends UpgradeProcess {
 
 			PreparedStatement preparedStatement1 = connection.prepareStatement(
 				"select content, id_ from JournalArticle where content like " +
-					"'%type=\"document_library\"%'");
+					"'%type=\"document_library\"%' or content like " +
+						"'%type=\"image_gallery\"%'");
 
 			ResultSet resultSet = preparedStatement1.executeQuery();
 
