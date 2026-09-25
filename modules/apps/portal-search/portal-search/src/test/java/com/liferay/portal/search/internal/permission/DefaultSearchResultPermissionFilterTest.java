@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalServiceUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.search.configuration.DefaultSearchResultPermissionFilterConfiguration;
 import com.liferay.portal.search.hits.SearchHitsBuilder;
 import com.liferay.portal.search.internal.searcher.SearchResponseImpl;
@@ -30,6 +31,7 @@ import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import org.junit.Assert;
@@ -176,6 +178,54 @@ public class DefaultSearchResultPermissionFilterTest {
 			searchContext, defaultSearchResultPermissionFilter, 0, true);
 
 		ResourcePermissionLocalServiceUtil.setService(null);
+	}
+
+	@Test
+	public void testSearchWithHighStart() {
+		_groupAdmin = false;
+		_permissionFilteredSearchResultAccurateCountThreshold = 0;
+
+		SearchContext searchContext = new SearchContext();
+
+		_mockPermission(searchContext);
+		_mockSearchResponse(searchContext);
+
+		searchContext.setEnd(5000000);
+		searchContext.setStart(4999995);
+
+		AtomicInteger searchesCount = new AtomicInteger();
+
+		Mockito.when(
+			_searchFunction.apply(searchContext)
+		).thenAnswer(
+			invocation -> {
+				if (searchesCount.incrementAndGet() > 1000) {
+					throw new IllegalStateException(
+						"Sliding window searches did not stop");
+				}
+
+				Document[] documents = new Document
+					[Math.max(
+						0, searchContext.getEnd() - searchContext.getStart())];
+
+				Arrays.fill(documents, _getDocument("1", 0));
+
+				Hits hits = new HitsImpl();
+
+				hits.setDocs(documents);
+				hits.setLength(PropsValues.INDEX_SEARCH_LIMIT * 2);
+				hits.setScores(new float[documents.length]);
+
+				return hits;
+			}
+		);
+
+		Hits hits = _getDefaultSearchResultPermissionFilter().search(
+			searchContext);
+
+		Assert.assertEquals(
+			PropsValues.INDEX_SEARCH_LIMIT / 100, searchesCount.get());
+		Assert.assertEquals(0, hits.getDocs().length);
 	}
 
 	@Test
