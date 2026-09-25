@@ -447,8 +447,9 @@ public class DefaultSearchResultPermissionFilter
 				int remainingDocsNeededCount =
 					totalDocsNeededCount - docsCollectedCount;
 
-				int slidingWindowSize =
-					remainingDocsNeededCount * amplificationFactor;
+				int slidingWindowSize = (int)Math.min(
+					(long)remainingDocsNeededCount * amplificationFactor,
+					Integer.MAX_VALUE - slidingWindowStart);
 
 				int slidingWindowEnd = slidingWindowStart + slidingWindowSize;
 
