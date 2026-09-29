@@ -51,6 +51,7 @@ import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.AbstractMap;
@@ -502,7 +503,8 @@ public class DDMFieldLocalServiceImpl extends DDMFieldLocalServiceBaseImpl {
 
 		_collectDDMFieldInfos(
 			ddmFieldInfosMap, ddmFormFieldsMap,
-			ddmFormValues.getDDMFormFieldValues(), null);
+			ddmFormValues.getDDMFormFieldValues(),
+			SetUtil.fromArray(StringPool.BLANK), null);
 
 		DDMFormUpdateContext ddmFormUpdateContext = _getDDMFormUpdateContext(
 			ddmFieldInfosMap, ddmFormFieldsMap, storageId);
@@ -636,7 +638,8 @@ public class DDMFieldLocalServiceImpl extends DDMFieldLocalServiceBaseImpl {
 	private void _collectDDMFieldInfos(
 		Map<String, DDMFieldInfo> ddmFieldInfosMap,
 		Map<String, DDMFormField> ddmFormFieldMap,
-		List<DDMFormFieldValue> ddmFormValues, String parentInstanceId) {
+		List<DDMFormFieldValue> ddmFormValues, Set<String> lowerCaseInstanceIds,
+		String parentInstanceId) {
 
 		for (DDMFormFieldValue ddmFormFieldValue : ddmFormValues) {
 			DDMFormField ddmFormField = ddmFormFieldMap.get(
@@ -646,9 +649,13 @@ public class DDMFieldLocalServiceImpl extends DDMFieldLocalServiceBaseImpl {
 				continue;
 			}
 
-			String instanceId = ddmFormFieldValue.getInstanceId();
+			String instanceId = GetterUtil.getString(
+				ddmFormFieldValue.getInstanceId());
 
-			while (ddmFieldInfosMap.containsKey(instanceId)) {
+			while (!lowerCaseInstanceIds.add(
+						com.liferay.portal.kernel.util.StringUtil.toLowerCase(
+							instanceId))) {
+
 				instanceId =
 					com.liferay.portal.kernel.util.StringUtil.randomString();
 			}
@@ -676,7 +683,8 @@ public class DDMFieldLocalServiceImpl extends DDMFieldLocalServiceBaseImpl {
 
 			_collectDDMFieldInfos(
 				ddmFieldInfosMap, ddmFormFieldMap,
-				ddmFormFieldValue.getNestedDDMFormFieldValues(), instanceId);
+				ddmFormFieldValue.getNestedDDMFormFieldValues(),
+				lowerCaseInstanceIds, instanceId);
 		}
 	}
 
