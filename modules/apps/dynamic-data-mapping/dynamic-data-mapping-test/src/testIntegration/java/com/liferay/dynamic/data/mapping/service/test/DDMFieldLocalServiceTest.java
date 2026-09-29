@@ -28,6 +28,7 @@ import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringPool;
+import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -454,6 +455,101 @@ public class DDMFieldLocalServiceTest {
 	}
 
 	@Test
+	public void testUpdateDDMFormValuesWhenInstanceIdIsBlank()
+		throws Exception {
+
+		DDMFormValues ddmFormValues = _updateNestedDDMFormValues(
+			StringPool.BLANK, RandomTestUtil.randomString());
+
+		DDMFormFieldValue parentDDMFormFieldValue =
+			ddmFormValues.getDDMFormFieldValue("parent", false);
+
+		Assert.assertNotEquals(
+			StringPool.BLANK, parentDDMFormFieldValue.getInstanceId());
+
+		_assertValue("parent value", parentDDMFormFieldValue);
+		_assertValue(
+			"child value",
+			_getNestedDDMFormFieldValue(parentDDMFormFieldValue));
+	}
+
+	@Test
+	public void testUpdateDDMFormValuesWhenInstanceIdIsNull() throws Exception {
+		DDMFormValues ddmFormValues = _updateNestedDDMFormValues(
+			null, RandomTestUtil.randomString());
+
+		DDMFormFieldValue parentDDMFormFieldValue =
+			ddmFormValues.getDDMFormFieldValue("parent", false);
+
+		Assert.assertNotEquals(
+			StringPool.BLANK, parentDDMFormFieldValue.getInstanceId());
+
+		_assertValue("parent value", parentDDMFormFieldValue);
+		_assertValue(
+			"child value",
+			_getNestedDDMFormFieldValue(parentDDMFormFieldValue));
+	}
+
+	@Test
+	public void testUpdateDDMFormValuesWhenInstanceIdsAreDistinct()
+		throws Exception {
+
+		DDMFormValues ddmFormValues = _updateDDMFormValues("aBcD", "EfGh");
+
+		DDMFormFieldValue ddmFormFieldValue1 =
+			ddmFormValues.getDDMFormFieldValue("field1", false);
+
+		Assert.assertEquals("aBcD", ddmFormFieldValue1.getInstanceId());
+
+		_assertValue("value1", ddmFormFieldValue1);
+
+		DDMFormFieldValue ddmFormFieldValue2 =
+			ddmFormValues.getDDMFormFieldValue("field2", false);
+
+		Assert.assertEquals("EfGh", ddmFormFieldValue2.getInstanceId());
+
+		_assertValue("value2", ddmFormFieldValue2);
+	}
+
+	@Test
+	public void testUpdateDDMFormValuesWhenInstanceIdsAreDuplicated()
+		throws Exception {
+
+		_testUpdateDDMFormValuesWithDuplicatedInstanceIds("abcd", "abcd");
+	}
+
+	@Test
+	public void testUpdateDDMFormValuesWhenInstanceIdsAreDuplicatedIgnoringCase()
+		throws Exception {
+
+		_testUpdateDDMFormValuesWithDuplicatedInstanceIds("abcd", "ABCD");
+	}
+
+	@Test
+	public void testUpdateDDMFormValuesWhenNestedInstanceIdsAreDuplicatedIgnoringCase()
+		throws Exception {
+
+		DDMFormValues ddmFormValues = _updateNestedDDMFormValues(
+			"abcd", "ABCD");
+
+		DDMFormFieldValue parentDDMFormFieldValue =
+			ddmFormValues.getDDMFormFieldValue("parent", false);
+
+		Assert.assertEquals("abcd", parentDDMFormFieldValue.getInstanceId());
+
+		_assertValue("parent value", parentDDMFormFieldValue);
+
+		DDMFormFieldValue childDDMFormFieldValue = _getNestedDDMFormFieldValue(
+			parentDDMFormFieldValue);
+
+		Assert.assertFalse(
+			StringUtil.equalsIgnoreCase(
+				"abcd", childDDMFormFieldValue.getInstanceId()));
+
+		_assertValue("child value", childDDMFormFieldValue);
+	}
+
+	@Test
 	public void testUpdateDDMFormValuesWithLegacyDDMFormField()
 		throws Exception {
 
@@ -643,6 +739,15 @@ public class DDMFieldLocalServiceTest {
 		}
 	}
 
+	private void _assertValue(
+		String expectedValue, DDMFormFieldValue ddmFormFieldValue) {
+
+		Value value = ddmFormFieldValue.getValue();
+
+		Assert.assertEquals(
+			expectedValue, value.getString(value.getDefaultLocale()));
+	}
+
 	private DDMFormField _createDDMFormField(
 		Locale locale, DDMForm ddmForm, String name, String type,
 		String dataType, String fieldNamespace,
@@ -707,6 +812,126 @@ public class DDMFieldLocalServiceTest {
 		ddmFormFieldValue.setValue(value);
 
 		return ddmFormFieldValue;
+	}
+
+	private DDMFormFieldValue _createDDMFormFieldValue(
+		String instanceId, Locale locale, String name, String s) {
+
+		DDMFormFieldValue ddmFormFieldValue = _createDDMFormFieldValue(
+			locale, name, s);
+
+		ddmFormFieldValue.setInstanceId(instanceId);
+
+		return ddmFormFieldValue;
+	}
+
+	private DDMFormFieldValue _getNestedDDMFormFieldValue(
+		DDMFormFieldValue ddmFormFieldValue) {
+
+		List<DDMFormFieldValue> nestedDDMFormFieldValues =
+			ddmFormFieldValue.getNestedDDMFormFieldValues();
+
+		Assert.assertEquals(
+			nestedDDMFormFieldValues.toString(), 1,
+			nestedDDMFormFieldValues.size());
+
+		return nestedDDMFormFieldValues.get(0);
+	}
+
+	private void _testUpdateDDMFormValuesWithDuplicatedInstanceIds(
+			String instanceId1, String instanceId2)
+		throws Exception {
+
+		DDMFormValues ddmFormValues = _updateDDMFormValues(
+			instanceId1, instanceId2);
+
+		DDMFormFieldValue ddmFormFieldValue1 =
+			ddmFormValues.getDDMFormFieldValue("field1", false);
+
+		Assert.assertEquals(instanceId1, ddmFormFieldValue1.getInstanceId());
+
+		_assertValue("value1", ddmFormFieldValue1);
+
+		DDMFormFieldValue ddmFormFieldValue2 =
+			ddmFormValues.getDDMFormFieldValue("field2", false);
+
+		Assert.assertFalse(
+			StringUtil.equalsIgnoreCase(
+				instanceId1, ddmFormFieldValue2.getInstanceId()));
+
+		_assertValue("value2", ddmFormFieldValue2);
+	}
+
+	private DDMFormValues _updateDDMFormValues(
+			String instanceId1, String instanceId2)
+		throws Exception {
+
+		DDMForm ddmForm = DDMFormTestUtil.createDDMForm("field1", "field2");
+
+		DDMStructure ddmStructure = _ddmStructureTestHelper.addStructure(
+			ddmForm, StorageType.DEFAULT.toString());
+
+		DDMFormValues ddmFormValues = new DDMFormValues(ddmForm);
+
+		ddmFormValues.setAvailableLocales(
+			Collections.singleton(LocaleUtil.ENGLISH));
+		ddmFormValues.setDDMFormFieldValues(
+			Arrays.asList(
+				_createDDMFormFieldValue(
+					instanceId1, LocaleUtil.ENGLISH, "field1", "value1"),
+				_createDDMFormFieldValue(
+					instanceId2, LocaleUtil.ENGLISH, "field2", "value2")));
+		ddmFormValues.setDefaultLocale(LocaleUtil.ENGLISH);
+
+		_ddmFieldLocalService.updateDDMFormValues(
+			ddmStructure.getStructureId(), _STORAGE_ID, ddmFormValues);
+
+		return _ddmFieldLocalService.getDDMFormValues(ddmForm, _STORAGE_ID);
+	}
+
+	private DDMFormValues _updateNestedDDMFormValues(
+			String parentInstanceId, String childInstanceId)
+		throws Exception {
+
+		Locale locale = LocaleUtil.getSiteDefault();
+
+		DDMForm ddmForm = new DDMForm();
+
+		ddmForm.setAvailableLocales(Collections.singleton(locale));
+		ddmForm.setDefaultLocale(locale);
+
+		DDMFormField parentDDMFormField = _createDDMFormField(
+			locale, ddmForm, "parent", "text", "string", null, null);
+
+		parentDDMFormField.addNestedDDMFormField(
+			_createDDMFormField(
+				locale, ddmForm, "child", "text", "string", null, null));
+
+		List<DDMFormField> ddmFormFields = ddmForm.getDDMFormFields();
+
+		ddmFormFields.add(parentDDMFormField);
+
+		DDMStructure ddmStructure = _ddmStructureTestHelper.addStructure(
+			ddmForm, StorageType.DEFAULT.toString());
+
+		DDMFormValues ddmFormValues = new DDMFormValues(ddmForm);
+
+		ddmFormValues.setAvailableLocales(Collections.singleton(locale));
+		ddmFormValues.setDefaultLocale(locale);
+
+		DDMFormFieldValue parentDDMFormFieldValue = _createDDMFormFieldValue(
+			parentInstanceId, locale, "parent", "parent value");
+
+		parentDDMFormFieldValue.addNestedDDMFormFieldValue(
+			_createDDMFormFieldValue(
+				childInstanceId, locale, "child", "child value"));
+
+		ddmFormValues.addDDMFormFieldValue(parentDDMFormFieldValue);
+
+		_ddmFieldLocalService.updateDDMFormValues(
+			ddmStructure.getStructureId(), _STORAGE_ID, ddmFormValues);
+
+		return _ddmFieldLocalService.getDDMFormValues(ddmForm, _STORAGE_ID);
 	}
 
 	private static final long _LAYOUT_ID = 1;
