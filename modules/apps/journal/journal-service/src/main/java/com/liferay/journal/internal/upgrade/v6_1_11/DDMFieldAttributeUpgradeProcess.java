@@ -42,8 +42,7 @@ public class DDMFieldAttributeUpgradeProcess extends UpgradeProcess {
 	protected void doUpgrade() throws Exception {
 		try (PreparedStatement preparedStatement1 = connection.prepareStatement(
 				StringBundler.concat(
-					"select DDMFieldAttribute.ctCollectionId, ",
-					"DDMFieldAttribute.fieldAttributeId, ",
+					"select DDMFieldAttribute.fieldAttributeId, ",
 					"DDMFieldAttribute.companyId, DDMFieldAttribute.fieldId, ",
 					"DDMFieldAttribute.storageId, ",
 					"DDMFieldAttribute.languageId, ",
@@ -58,6 +57,7 @@ public class DDMFieldAttributeUpgradeProcess extends UpgradeProcess {
 					"on DDMField.ctCollectionId = ",
 					"DDMFieldAttribute.ctCollectionId and DDMField.fieldId = ",
 					"DDMFieldAttribute.fieldId where ",
+					"DDMFieldAttribute.ctCollectionId = 0 and ",
 					"DDMStructure.ctCollectionId = 0 and ",
 					"DDMStructure.classNameId = ? and DDMField.fieldType = ? ",
 					"and (DDMFieldAttribute.attributeName is null or ",
@@ -65,8 +65,8 @@ public class DDMFieldAttributeUpgradeProcess extends UpgradeProcess {
 			PreparedStatement preparedStatement2 =
 				AutoBatchPreparedStatementUtil.autoBatch(
 					connection,
-					"delete from DDMFieldAttribute where ctCollectionId = ? " +
-						"and fieldAttributeId = ?");
+					"delete from DDMFieldAttribute where ctCollectionId = 0 and " +
+						"fieldAttributeId = ?");
 			PreparedStatement preparedStatement3 =
 				AutoBatchPreparedStatementUtil.autoBatch(
 					connection,
@@ -75,7 +75,7 @@ public class DDMFieldAttributeUpgradeProcess extends UpgradeProcess {
 						"ctCollectionId, fieldAttributeId, companyId, ",
 						"fieldId, storageId, attributeName, languageId, ",
 						"largeAttributeValue, smallAttributeValue) values (0, ",
-						"?, ?, ?, ?, ?, ?, ?, ?, ?)"))) {
+						"0, ?, ?, ?, ?, ?, ?, ?, ?)"))) {
 
 			preparedStatement1.setLong(
 				1,
@@ -106,12 +106,8 @@ public class DDMFieldAttributeUpgradeProcess extends UpgradeProcess {
 						continue;
 					}
 
-					long ctCollectionId = resultSet.getLong("ctCollectionId");
-
-					preparedStatement2.setLong(1, ctCollectionId);
-
 					preparedStatement2.setLong(
-						2, resultSet.getLong("fieldAttributeId"));
+						1, resultSet.getLong("fieldAttributeId"));
 
 					preparedStatement2.addBatch();
 
@@ -132,43 +128,41 @@ public class DDMFieldAttributeUpgradeProcess extends UpgradeProcess {
 
 					for (String key : keySet) {
 						_addDDMFieldAttribute(
-							preparedStatement3, ctCollectionId,
-							++fieldAttributeId, companyId, fieldId, storageId,
-							key, languageId,
+							preparedStatement3, ++fieldAttributeId, companyId,
+							fieldId, storageId, key, languageId,
 							_jsonSerializer.serialize(jsonObject.get(key)));
 					}
-
-					preparedStatement2.executeBatch();
-
-					preparedStatement3.executeBatch();
 				}
 			}
+
+			preparedStatement2.executeBatch();
+
+			preparedStatement3.executeBatch();
 		}
 	}
 
 	private void _addDDMFieldAttribute(
-			PreparedStatement preparedStatement, long ctCollectionId,
-			long fieldAttributeId, long companyId, long fieldId, long storageId,
-			String attributeName, String languageId, String attributeValue)
+			PreparedStatement preparedStatement, long fieldAttributeId,
+			long companyId, long fieldId, long storageId, String attributeName,
+			String languageId, String attributeValue)
 		throws Exception {
 
-		preparedStatement.setLong(1, ctCollectionId);
-		preparedStatement.setLong(2, fieldAttributeId);
-		preparedStatement.setLong(3, companyId);
-		preparedStatement.setLong(4, fieldId);
-		preparedStatement.setLong(5, storageId);
-		preparedStatement.setString(6, attributeName);
-		preparedStatement.setString(7, languageId);
+		preparedStatement.setLong(1, fieldAttributeId);
+		preparedStatement.setLong(2, companyId);
+		preparedStatement.setLong(3, fieldId);
+		preparedStatement.setLong(4, storageId);
+		preparedStatement.setString(5, attributeName);
+		preparedStatement.setString(6, languageId);
 
 		byte[] bytes = attributeValue.getBytes(StandardCharsets.UTF_8);
 
 		if (bytes.length > _SMALL_ATTRIBUTE_VALUE_MAX_LENGTH) {
-			preparedStatement.setString(8, attributeValue);
-			preparedStatement.setString(9, null);
+			preparedStatement.setString(7, attributeValue);
+			preparedStatement.setString(8, null);
 		}
 		else {
-			preparedStatement.setString(8, null);
-			preparedStatement.setString(9, attributeValue);
+			preparedStatement.setString(7, null);
+			preparedStatement.setString(8, attributeValue);
 		}
 
 		preparedStatement.addBatch();
