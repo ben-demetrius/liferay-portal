@@ -8,15 +8,20 @@ package com.liferay.layout.service.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.portal.kernel.exception.LayoutSetJavaScriptException;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Image;
+import com.liferay.portal.kernel.model.LayoutSet;
+import com.liferay.portal.kernel.service.ImageLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -63,8 +68,62 @@ public class LayoutSetLocalServiceTest {
 			).buildString());
 	}
 
+	@Test
+	public void testUpdateLogoWithDifferentContent() throws Exception {
+		LayoutSet layoutSet = _layoutSetLocalService.updateLogo(
+			_group.getGroupId(), false, true,
+			FileUtil.getBytes(getClass(), "dependencies/classic_logo.png"));
+
+		long logoId = layoutSet.getLogoId();
+
+		byte[] bytes = FileUtil.getBytes(
+			getClass(), "dependencies/dxp_logo.png");
+
+		layoutSet = _layoutSetLocalService.updateLogo(
+			_group.getGroupId(), false, true, bytes);
+
+		Assert.assertNotEquals(logoId, layoutSet.getLogoId());
+
+		Assert.assertNull(_imageLocalService.fetchImage(logoId));
+
+		_assertImageBytes(bytes, layoutSet.getLogoId());
+	}
+
+	@Test
+	public void testUpdateLogoWithSameContent() throws Exception {
+		byte[] bytes = FileUtil.getBytes(
+			getClass(), "dependencies/classic_logo.png");
+
+		LayoutSet layoutSet = _layoutSetLocalService.updateLogo(
+			_group.getGroupId(), false, true, bytes);
+
+		long logoId = layoutSet.getLogoId();
+
+		layoutSet = _layoutSetLocalService.updateLogo(
+			_group.getGroupId(), false, true, bytes);
+
+		Assert.assertEquals(logoId, layoutSet.getLogoId());
+
+		_assertImageBytes(bytes, logoId);
+	}
+
+	private void _assertImageBytes(byte[] bytes, long imageId)
+		throws Exception {
+
+		Image image = _imageLocalService.getImage(imageId);
+
+		Assert.assertArrayEquals(
+			bytes,
+			FileUtil.getBytes(
+				_imageLocalService.getImageInputStream(
+					image.getCompanyId(), imageId, image.getType())));
+	}
+
 	@DeleteAfterTestRun
 	private Group _group;
+
+	@Inject
+	private ImageLocalService _imageLocalService;
 
 	@Inject
 	private LayoutSetLocalService _layoutSetLocalService;
