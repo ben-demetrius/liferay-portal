@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.Image;
 import com.liferay.portal.kernel.module.service.Snapshot;
+import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GroupThreadLocal;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.webserver.WebServerServletTokenUtil;
@@ -27,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -119,7 +121,13 @@ public class ImageLocalServiceImpl extends ImageLocalServiceBaseImpl {
 
 	@Override
 	public Image moveImage(long imageId, byte[] bytes) throws PortalException {
-		Image image = updateImage(
+		Image image = fetchImage(imageId);
+
+		if ((image != null) && _hasContent(image, bytes)) {
+			return image;
+		}
+
+		image = updateImage(
 			_getImageCompanyId(imageId), counterLocalService.increment(),
 			bytes);
 
@@ -288,6 +296,35 @@ public class ImageLocalServiceImpl extends ImageLocalServiceBaseImpl {
 		}
 
 		return image.getCompanyId();
+	}
+
+	private boolean _hasContent(Image image, byte[] bytes)
+		throws PortalException {
+
+		if (image.getSize() != bytes.length) {
+			return false;
+		}
+
+		Store store = _storeSnapshot.get();
+
+		String fileName = _getFileName(image.getImageId(), image.getType());
+
+		if (!store.hasFile(
+				image.getCompanyId(), _REPOSITORY_ID, fileName,
+				Store.VERSION_DEFAULT)) {
+
+			return false;
+		}
+
+		try (InputStream inputStream = store.getFileAsStream(
+				image.getCompanyId(), _REPOSITORY_ID, fileName,
+				StringPool.BLANK)) {
+
+			return Arrays.equals(bytes, FileUtil.getBytes(inputStream));
+		}
+		catch (IOException ioException) {
+			throw new SystemException(ioException);
+		}
 	}
 
 	private static final long _REPOSITORY_ID = 0;
