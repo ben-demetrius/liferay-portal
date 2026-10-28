@@ -174,11 +174,11 @@ public class FragmentEntryConfigurationParserImpl
 			if (StringUtil.equalsIgnoreCase(
 					fragmentConfigurationField.getType(), "itemSelector")) {
 
-				Object contextObject = displayObject;
+				Object contextObject = _getInfoDisplayObjectEntry(
+					configurationValuesJSONObject.getString(name));
 
-				if (displayObject == null) {
-					contextObject = _getInfoDisplayObjectEntry(
-						configurationValuesJSONObject.getString(name));
+				if (contextObject == null) {
+					contextObject = displayObject;
 				}
 
 				if (contextObject != null) {
